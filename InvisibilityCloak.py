@@ -203,7 +203,7 @@ def canProceedWithObfuscation(theLine, theItem):
 	if len(theItem) < 2 :
 		return 0
 	# don't obfuscate string if using string interpolation
-	elif "$\"" in theItem or "=$" in theLine or "= $" in theLine or "$@" in theLine or "String.Format(\"" in theLine:
+	elif "$\"" in theItem or "=$" in theLine or "= $" in theLine or "$@" in theLine or "String.Format(" in theLine or "string.Format(" in theLine:
 		return 0
 	# can't obfuscate case statements as they need to be static values
 	elif theLine.strip().startswith("case") == 1:
@@ -215,7 +215,7 @@ def canProceedWithObfuscation(theLine, theItem):
 	elif isLineMethodSignature(theLine) == 1:
 		return 0 
 	# obfuscating strings in regexes has been problematic
-	elif "new Regex" in theLine:
+	elif "new Regex" in theLine or "Regex" in theLine:
 		return 0
 	# can't obfuscate override strings
 	elif "public override string" in theLine or "private override string" in theLine:
