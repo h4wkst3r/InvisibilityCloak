@@ -29,7 +29,7 @@ LICENSE
 
 VERSION
 
-	0.1
+	0.2
 
 """
 
@@ -200,7 +200,7 @@ def isLineMethodSignature(theLine):
 def canProceedWithObfuscation(theLine, theItem):
 
 	# only obfuscate string if greater than 2 chars
-	if len(theItem) < 2 :
+	if len(theItem) <= 2 :
 		return 0
 	# don't obfuscate string if using string interpolation
 	elif "$\"" in theItem or "=$" in theLine or "= $" in theLine or "$@" in theLine or "String.Format(" in theLine or "string.Format(" in theLine:
@@ -283,7 +283,7 @@ def stringObfuscate(theFile, theName, theObfMethod):
 			
 
 			# if the line has an embedded string (\"something\"), handle it
-			if substringCount >= 2 and "@" not in strippedLine and "\"" + "\\\\" + "\"" not in strippedLine and "public override string" not in strippedLine and "\\\\" + "\"\"" not in strippedLine:
+			if substringCount >= 2 and "@" not in strippedLine and "\"" + "\\\\" + "\"" not in strippedLine and "public override string" not in strippedLine and "\\\\" + "\"\"" not in strippedLine and "String.Format(" not in strippedLine and "string.Format(" not in strippedLine:
 				strippedLine = strippedLine.replace("\\" + "\"", "++====THISGETSREPLACED====++")
 
 			# find all strings in the line and add to an array
