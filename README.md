@@ -16,6 +16,8 @@ The below string candidates are not included in obfuscation
 * Case statements as they need to be static values
 * Const vars as they need to be static values
 * Strings in method signatures as they need to be static values
+* Line with `" => "` as used in switch statement and needs to be static value.
+* ` is ` in an if statement when doing comparison as the values compared must be static
 * Strings within Regexes
 * Override strings as they need to be static values
 * The below random edge cases for strings, as they have caused issues when encoding/decoding
@@ -23,6 +25,10 @@ The below string candidates are not included in obfuscation
   * `""'` in the line
   * `+ @"` in the line
   * `"""` in the line
+  * `""` in the line
+  * `Encoding.Unicode.GetString` in the line
+  * `Encoding.ASCII.GetBytes` in the line
+  * Line starting with `"` and ending with `")]`. This is typically used for command line switches and needs to be static value.
 
 ## Support Information
 * Windows
@@ -32,21 +38,38 @@ The below string candidates are not included in obfuscation
 ## Arguments/Options
 
 * `-d, --directory` - directory where your visual studio project is located
-* `-m, --method` - obfuscation method (base64, rot13)
+* `-m, --method` - obfuscation method (base64, rot13, reverse)
 * `-n, --name` - name of your new tool
 * `-h, --help` - help menu
 * `--version` - get version of tool
 
 ## Usage/Examples
 
+### Run InvisibilityCloak with string obfuscation
+
+**Base64 String Obfuscation**
+
 `python InvisibilityCloak.py -d /path/to/project -n "TotallyLegitTool" -m base64`
 
 `python InvisibilityCloak.py -d C:\path\to\project -n "TotallyLegitTool" -m base64`
+
+**ROT13 String Obfuscation**
 
 `python InvisibilityCloak.py -d /path/to/project -n "TotallyLegitTool" -m rot13`
 
 `python InvisibilityCloak.py -d C:\path\to\project -n "TotallyLegitTool" -m rot13`
 
+**Reverse String Obfuscation**
+
+`python InvisibilityCloak.py -d /path/to/project -n "TotallyLegitTool" -m reverse`
+
+`python InvisibilityCloak.py -d C:\path\to\project -n "TotallyLegitTool" -m reverse`
+
+### Run InvisibilityCloak without string obfuscation
+
+`python InvisibilityCloak.py -d /path/to/project -n "TotallyLegitTool"`
+
+`python InvisibilityCloak.py -d C:\path\to\project -n "TotallyLegitTool"`
 
 ## Output
 

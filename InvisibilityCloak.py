@@ -12,11 +12,22 @@ SUPPORTED OBFUSCATION METHODS
 
 	base64 - Base64 encode all strings within project and have them decoded at runtime
 	rot13 - Rotate each character in string by 13
+	reverse - Reverse all strings within project and have them re-reversed at runtime
+	
 
 EXAMPLES
 
+        ==Run InvisibilityCloak with string obfuscation==
+        
 	InvisibilityCloak.py -d C:\path\\to\project -n "TotallyLegitTool" -m base64
 	InvisibilityCloak.py -d C:\path\\to\project -n "TotallyLegitTool" -m rot13
+	InvisibilityCloak.py -d C:\path\\to\project -n "TotallyLegitTool" -m reverse
+
+
+	==Run InvisibilityCloak without string obfuscation==
+	
+	InvisibilityCloak.py -d C:\path\\to\project -n "TotallyLegitTool"
+
 
 AUTHOR
 
@@ -29,7 +40,7 @@ LICENSE
 
 VERSION
 
-	0.2
+	0.3
 
 """
 
@@ -121,14 +132,22 @@ def replaceGUIDAndToolName(theDirectory, theName):
 	openCSProjFile = open(csProjFile, 'r')
 	openCopyCSProjFile = open(csProjFile + "_copy", "w")
 	csProjLines = openCSProjFile.readlines()
+	
+	print("")
+	print("[*] INFO: Removing PDB string in C# project file")
+	print("")
 	for line in csProjLines:
 
 		# if the line has the current tool name or old guid, then replace it
 		line = line.replace(currentGUID, "{" + newGUID + "}")
-		line = line.replace(currentToolName, theName)
 
-		# remove pdb string option for compilation of C# tool
+		# replace any line in C# project file that has old tool name, except for nuget package reference or references to application icons
+		if "<PackageReference Include=" not in line and "<ApplicationIcon>" not in line:
+                        line = re.sub('(?i)'+re.escape(currentToolName), lambda m: theName, line)
+
+                # remove the pdb string options from C# project file
 		line = line.replace("<DebugType>pdbonly</DebugType>","<DebugType>none</DebugType>")
+		line = line.replace("<DebugType>full</DebugType>","<DebugType>none</DebugType>")
 		openCopyCSProjFile.write(line)
 
 	openCSProjFile.close()
@@ -180,13 +199,22 @@ def replaceGUIDAndToolName(theDirectory, theName):
 
 	origWorkingDir = os.getcwd()
 	os.chdir(theDirectory)
-	os.rename(currentToolName, theName)
+	if os.path.isfile(currentToolName) or os.path.exists(theDirectory + "\\" + currentToolName):
+                os.rename(currentToolName, theName)
 	os.chdir(origWorkingDir)
 
 	print("")
 	print("[+] SUCCESS: New GUID of " + newGUID + " was generated and replaced in your project")
 	print("[+] SUCCESS: New tool name of " + theName + " was replaced in project")
 	print("")
+
+
+# method to reverse a given string
+def reverseString(s): 
+  str = "" 
+  for i in s: 
+    str = i + str
+  return str
 
 
 # method to determine if line is part of a method signature (can't have dynamic strings in method singature)
@@ -211,11 +239,20 @@ def canProceedWithObfuscation(theLine, theItem):
 	# can't obfuscate const vars
 	elif "const string " in theLine or "const static string" in theLine:
 		return 0
+	# can't obfuscate strings being compared with "is" as they must be static
+	elif ("if(" in theLine or "if (" in theLine) and " is \"" in theLine:
+		return 0
 	# can't obfuscate strings in method signatures
 	elif isLineMethodSignature(theLine) == 1:
 		return 0 
 	# obfuscating strings in regexes has been problematic
 	elif "new Regex" in theLine or "Regex" in theLine:
+		return 0
+	# obfuscating unicode strings has been problematic
+	elif "Encoding.Unicode.GetString" in theLine:
+		return 0
+	# obfuscating occurrence of this has been problematic
+	elif "Encoding.ASCII.GetBytes" in theLine:
 		return 0
 	# can't obfuscate override strings
 	elif "public override string" in theLine or "private override string" in theLine:
@@ -232,6 +269,15 @@ def canProceedWithObfuscation(theLine, theItem):
 	# random edge case issue (""" in the line)
 	elif "\"\"\"" in theLine:
 		return 0
+	# random edge case issue ("" in the line)
+	elif "\"\"" in theLine:
+		return 0
+	# random edge case issue (" => " in the line in switch statement)
+	elif "\" => \"" in theLine or "\"=>\"" in theLine :
+		return 0
+	# random edge case issue (" at start of line and ending in "])). this indicates a command line switch that needs to be static
+	elif theLine.strip().startswith("\"") == 1 and theLine.strip().endswith("\")]"):
+		return 0
 	# otherwise, it is ok to proceed with string obfuscation
 	else:
 		return 1
@@ -245,6 +291,9 @@ def stringObfuscate(theFile, theName, theObfMethod):
 
 	if theObfMethod == "rot13":
 		print("[*] INFO: Performing rot13 obfuscation on strings in " + theFile)
+
+	if theObfMethod == "reverse":
+		print("[*] INFO: Performing reverse obfuscation on strings in " + theFile)
 
 	# make copy of source file that modifications will be written to
 	copyfile(theFile,theFile + "_copy")
@@ -356,6 +405,40 @@ def stringObfuscate(theFile, theName, theObfMethod):
 							strippedLine = strippedLine.replace("$new string(", "new string(")
 
 
+					# if string obfuscation method is reverse
+					if theObfMethod == "reverse":
+						reversedString = reverseString(theString)
+
+						# if the line has escaped strings (e.g., \r, \t, etc.)
+						if "\\r" in strippedLine or "\\n" in strippedLine or "\\t" in strippedLine or "\"" in strippedLine or "\'" in strippedLine:
+							if "++====THISGETSREPLACED====++" in strippedLine:
+								strippedLine = strippedLine.replace("\"" +theString + "\"", "new string(@" + "\"" + reversedString + "\"" + ".ToCharArray().Reverse().ToArray())")
+							else:
+								strippedLine = strippedLine.replace("\"" +theString + "\"", "new string(" + "\"" + reversedString + "\"" + ".ToCharArray().Reverse().ToArray())")
+
+							strippedLine = strippedLine.replace("r\\", "r\\\\")
+							strippedLine = strippedLine.replace("t\\", "t\\\\")
+							strippedLine = strippedLine.replace("n\\", "n\\\\")
+							strippedLine = strippedLine.replace("r\\\\\\", "r\\\\")
+							strippedLine = strippedLine.replace("n\\\\\\", "n\\\\")
+							strippedLine = strippedLine.replace("t\\\\\\", "t\\\\")
+							strippedLine = strippedLine.replace("++====DECALPERSTEGSIHT====++","\"\"") # remove placeholder strings
+							strippedLine = strippedLine.replace("++====THISGETSREPLACED====++","\\" + "\"") # remove placeholder strings
+							strippedLine = strippedLine.replace("@new string(", "new string(@")
+							strippedLine = strippedLine.replace("$new string(", "new string(")
+							strippedLine = strippedLine.replace("r\\\\\\", "r\\\\")
+							strippedLine = strippedLine.replace("n\\\\\\", "n\\\\")
+							strippedLine = strippedLine.replace("t\\\\\\", "t\\\\")
+
+						# if the line does not have escaped strings
+						else:
+							strippedLine = strippedLine.replace("\"" + theString + "\"", "new string(@" + "\"" + reversedString + "\"" + ".ToCharArray().Reverse().ToArray())")
+							strippedLine = strippedLine.replace("++====DECALPERSTEGSIHT====++","\"\"") # remove placeholder strings
+							strippedLine = strippedLine.replace("++====THISGETSREPLACED====++","\\" + "\"") # remove placeholder strings
+							strippedLine = strippedLine.replace("@new string(", "new string(@")
+							strippedLine = strippedLine.replace("$new string(", "new string(")
+
+			strippedLine = strippedLine.replace("++====THISGETSREPLACED====++","") # remove any placeholder string that wasn't a string candidate originally
 			fInCopy.write(strippedLine)
 
 		# remove duplicate libraries for ones that are included for string deobfuscation
@@ -397,10 +480,15 @@ def stringObfuscate(theFile, theName, theObfMethod):
 			line = line.replace(currentToolName,theName)
 			fInCopy.write(line)
 
+		# last catch for any of the placeholder strings that need removed
+		elif "++====THISGETSREPLACED====++" in line:
+			line = line.replace("++====THISGETSREPLACED====++","")
+			fInCopy.write(line)		
+
 		# if no modifications need done to the line
 		else:
 			fInCopy.write(line)
-
+ 
 	# close file streams and replace old source file with new modified one
 	fIn.close()
 	fInCopy.close()
@@ -428,13 +516,13 @@ def main(theObfMethod, theDirectory, theName):
 
 	# generate new GUID for C# project and replace tool name
 	replaceGUIDAndToolName(theDirectory, theName)
-
-	# perform appropriate obfuscation method to all strings within the project
-	for r, d, f in os.walk(theDirectory):
-        	for file in f:
-        		if file.endswith(".cs") and "AssemblyInfo.cs" not in file:
-        			stringObfuscate(os.path.join(r, file), theName, theObfMethod)
-
+    
+    # if user wants to obfuscate strings, then proceed
+	if theObfMethod != "":
+                for r, d, f in os.walk(theDirectory):
+                    for file in f:
+                        if file.endswith(".cs") and "AssemblyInfo.cs" not in file:
+                            stringObfuscate(os.path.join(r, file), theName, theObfMethod)
 
 	print("")
 	print("[+] SUCCESS: Your new tool \"" + theName +  "\" now has the invisibility cloak applied.")
@@ -443,22 +531,22 @@ def main(theObfMethod, theDirectory, theName):
 
 if __name__ == '__main__':
 	try:
-		parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter(), usage=globals()['__doc__'], version='0.1')
+		parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter(), usage=globals()['__doc__'], version='0.3')
 		parser.add_option('-m', '--method', dest='obfMethod',help='string obfuscation method')
 		parser.add_option('-d', '--directory', dest='directory',help='directory of C# project')
 		parser.add_option('-n', '--name', dest='name',help='new tool name')
 		(options, args) = parser.parse_args()
 
-		# if obf method , directory or name or not specified, display help and exit
-		if (options.obfMethod == None or options.directory == None or options.name == None):
+		# if directory or name or not specified, display help and exit
+		if (options.directory == None or options.name == None):
 			print("")
-			print("[-] ERROR: You must supply string obfuscation method, directory of C# project and new name for tool.")
+			print("[-] ERROR: You must supply directory of C# project and new name for tool.")
 			print("")
 			parser.print_help()
 			sys.exit(0)
 
 		# if obfuscation method is not supported method, display help and exit
-		if (options.obfMethod != "base64" and options.obfMethod != "rot13"):
+		if (options.obfMethod != None and (options.obfMethod != "base64" and options.obfMethod != "rot13" and options.obfMethod != "reverse")):
 			print("")
 			print("[-] ERROR: You must supply a supported string obfuscation method")
 			print("")
@@ -473,10 +561,14 @@ if __name__ == '__main__':
 			print("")
 			sys.exit(0)
 
-		# initialize variables
+		# initialize variables        
 		theObfMethod = options.obfMethod
 		theDirectory = options.directory
 		theName = options.name
+        
+                # if no obfuscation method supplied
+		if theObfMethod == None:
+			theObfMethod = ""
 
 		# proceed to main method
 		main(theObfMethod, theDirectory, theName)
