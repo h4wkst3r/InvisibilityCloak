@@ -199,8 +199,10 @@ def replaceGUIDAndToolName(theDirectory, theName):
 
 	origWorkingDir = os.getcwd()
 	os.chdir(theDirectory)
+	if os.path.exists(currentToolName):
+		os.rename(currentToolName, theName)
 	if os.path.isfile(currentToolName) or os.path.exists(theDirectory + "\\" + currentToolName):
-                os.rename(currentToolName, theName)
+		os.rename(currentToolName, theName)
 	os.chdir(origWorkingDir)
 
 	print("")
