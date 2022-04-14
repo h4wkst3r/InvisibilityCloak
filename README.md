@@ -129,17 +129,6 @@ The below table shows the file sizes of 20 popular public C# tools between the u
 
 
 
-## Output
-
-Below is what the output would look like when running the tool.
-
-![screenshot](Running_InvisibilityCloak.PNG)
-
-Below is the difference in Seatbelt between unobfuscated and then obfuscated version with InvisibilityCloak against Microsoft Defender using [Defender Check](https://github.com/matterpreter/DefenderCheck).
-
-![screenshot](Defender_Check_Output.PNG)
-
-
 ## Roadmap
 
 * Add support for C# projects with multiple C# project files (multi-project solutions)
