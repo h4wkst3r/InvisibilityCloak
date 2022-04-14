@@ -75,12 +75,12 @@ The below string candidates are not included in obfuscation
 
 The below table shows the signature-based detection statistics between the unobfuscated and obfuscated versions of 20 popular public C# tools with InvisibilityCloak.
 
-**This is specifically for Microsoft Defender (free version), and accurate as of April 4th, 2022.**
+**This is specifically for Microsoft Defender (free version), and accurate as of April 14th, 2022.**
 
 | Tool      | Link | Unobfuscated | Obfuscated w/ InvisibilityCloak |
 | ----------- | ----------- | ----------- | ----------- |
 | ADCSPwn   | https://github.com/bats3c/ADCSPwn        | **Detected**        | Not Detected         |
-| Certify      | https://github.com/GhostPack/Certify       | **Detected**       | **Detected**       |
+| Certify      | https://github.com/GhostPack/Certify       | **Detected**       | Not Detected      |
 | Farmer   | https://github.com/mdsecactivebreach/Farmer        | **Detected**        | Not Detected         |
 | Rubeus      | https://github.com/GhostPack/Rubeus       | **Detected**       | **Detected**       |
 | SafetyKatz   | https://github.com/GhostPack/SafetyKatz        | **Detected**        | Not Detected         |
@@ -98,7 +98,7 @@ The below table shows the signature-based detection statistics between the unobf
 | SharpView   | https://github.com/tevora-threat/SharpView        | **Detected**        | Not Detected         |
 | SharpWMI      | https://github.com/GhostPack/SharpWMI       | **Detected**       | Not Detected        |
 | StandIn   | https://github.com/xforcered/StandIn        | **Detected**        | Not Detected         |
-| WireTap   | https://github.com/djhohnstein/WireTap        | **Detected**        | Not Detected         |
+| WireTap   | https://github.com/djhohnstein/WireTap        | Not Detected        | Not Detected         |
 
 ## Compiled C# Tool Size Statistics
 
@@ -138,3 +138,9 @@ Below is what the output would look like when running the tool.
 Below is the difference in Seatbelt between unobfuscated and then obfuscated version with InvisibilityCloak against Microsoft Defender using [Defender Check](https://github.com/matterpreter/DefenderCheck).
 
 ![screenshot](Defender_Check_Output.PNG)
+
+
+## Roadmap
+
+* Add support for C# projects with multiple C# project files (multi-project solutions)
+* Obfuscation support for variable names and method names

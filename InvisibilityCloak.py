@@ -40,7 +40,7 @@ LICENSE
 
 VERSION
 
-	0.3
+	0.4
 
 """
 
@@ -199,6 +199,7 @@ def replaceGUIDAndToolName(theDirectory, theName):
 
 	origWorkingDir = os.getcwd()
 	os.chdir(theDirectory)
+	print("[*] INFO: Renaming directory " + currentToolName + " to " + theName)
 	if os.path.exists(currentToolName):
 		os.rename(currentToolName, theName)
 	if os.path.isfile(currentToolName) or os.path.exists(theDirectory + "\\" + currentToolName):
@@ -233,7 +234,7 @@ def canProceedWithObfuscation(theLine, theItem):
 	if len(theItem) <= 2 :
 		return 0
 	# don't obfuscate string if using string interpolation
-	elif "$\"" in theItem or "=$" in theLine or "= $" in theLine or "$@" in theLine or "String.Format(" in theLine or "string.Format(" in theLine:
+	elif ("{" in theItem or "}" in theItem and "$" in theLine) or ("String.Format(" in theLine or "string.Format(" in theLine):
 		return 0
 	# can't obfuscate case statements as they need to be static values
 	elif theLine.strip().startswith("case") == 1:
@@ -323,7 +324,7 @@ def stringObfuscate(theFile, theName, theObfMethod):
 		stringsInLine = ""
 
 
-		if "$\"" not in line and line.strip().startswith("[") == 0:
+		if line.strip().startswith("[") == 0:
 			strippedLine = line
 
 			if index >= 2:
@@ -523,8 +524,8 @@ def main(theObfMethod, theDirectory, theName):
 	if theObfMethod != "":
                 for r, d, f in os.walk(theDirectory):
                     for file in f:
-                        if file.endswith(".cs") and "AssemblyInfo.cs" not in file:
-                            stringObfuscate(os.path.join(r, file), theName, theObfMethod)
+                        if file.endswith(".cs") and "AssemblyInfo.cs" not in file and r.endswith("obj\\Debug") == 0 and r.endswith("obj\\Release") == 0:
+                                stringObfuscate(os.path.join(r, file), theName, theObfMethod)
 
 	print("")
 	print("[+] SUCCESS: Your new tool \"" + theName +  "\" now has the invisibility cloak applied.")
@@ -533,7 +534,7 @@ def main(theObfMethod, theDirectory, theName):
 
 if __name__ == '__main__':
 	try:
-		parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter(), usage=globals()['__doc__'], version='0.3')
+		parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter(), usage=globals()['__doc__'], version='0.4')
 		parser.add_option('-m', '--method', dest='obfMethod',help='string obfuscation method')
 		parser.add_option('-d', '--directory', dest='directory',help='directory of C# project')
 		parser.add_option('-n', '--name', dest='name',help='new tool name')
