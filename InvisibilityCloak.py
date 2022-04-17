@@ -17,8 +17,8 @@ SUPPORTED OBFUSCATION METHODS
 
 EXAMPLES
 
-        ==Run InvisibilityCloak with string obfuscation==
-        
+				==Run InvisibilityCloak with string obfuscation==
+				
 	InvisibilityCloak.py -d C:\path\\to\project -n "TotallyLegitTool" -m base64
 	InvisibilityCloak.py -d C:\path\\to\project -n "TotallyLegitTool" -m rot13
 	InvisibilityCloak.py -d C:\path\\to\project -n "TotallyLegitTool" -m reverse
@@ -143,9 +143,9 @@ def replaceGUIDAndToolName(theDirectory, theName):
 
 		# replace any line in C# project file that has old tool name, except for nuget package reference or references to application icons
 		if "<PackageReference Include=" not in line and "<ApplicationIcon>" not in line:
-                        line = re.sub('(?i)'+re.escape(currentToolName), lambda m: theName, line)
+												line = re.sub('(?i)'+re.escape(currentToolName), lambda m: theName, line)
 
-                # remove the pdb string options from C# project file
+								# remove the pdb string options from C# project file
 		line = line.replace("<DebugType>pdbonly</DebugType>","<DebugType>none</DebugType>")
 		line = line.replace("<DebugType>full</DebugType>","<DebugType>none</DebugType>")
 		openCopyCSProjFile.write(line)
@@ -214,10 +214,10 @@ def replaceGUIDAndToolName(theDirectory, theName):
 
 # method to reverse a given string
 def reverseString(s): 
-  str = "" 
-  for i in s: 
-    str = i + str
-  return str
+	str = "" 
+	for i in s: 
+		str = i + str
+	return str
 
 
 # method to determine if line is part of a method signature (can't have dynamic strings in method singature)
@@ -288,6 +288,7 @@ def canProceedWithObfuscation(theLine, theItem):
 
 # method to obfuscate strings based on method entered by user
 def stringObfuscate(theFile, theName, theObfMethod):
+	currentToolName = 'lol'
 
 	if theObfMethod == "base64":
 		print("[*] INFO: Performing base64 obfuscation on strings in " + theFile)
@@ -500,7 +501,7 @@ def stringObfuscate(theFile, theName, theObfMethod):
 
 
 # main method
-def main(theObfMethod, theDirectory, theName):
+def main(theObfMethod, theDirectory, theName, theFile=None):
 
 	print("""
 ,                 .     .   .        ,-. .         ,   
@@ -508,42 +509,54 @@ def main(theObfMethod, theDirectory, theName):
 | ;-. . , . ,-. . |-. . | . |-  . . |    | ,-. ,-: | , 
 | | | |/  | `-. | | | | | | |   | | \    | | | | | |<  
 ' ' ' '   ' `-' ' `-' ' ' ' `-' `-|  `-' ' `-' `-` ' ` 
-                                `-'                    
+																`-'                    
 """)
 
 	print("====================================================")
 	print("[*] INFO: String obfuscation method: " + theObfMethod)
-	print("[*] INFO: Directory of C# project: " + theDirectory)
+	if (theFile == None):
+		print("[*] INFO: Directory of C# project: " + theDirectory)
+	else:
+		print("[*] INFO: C# file: " + theFile)
 	print("[*] INFO: New tool name: " + theName)
 	print("====================================================")
 
-	# generate new GUID for C# project and replace tool name
-	replaceGUIDAndToolName(theDirectory, theName)
-    
-    # if user wants to obfuscate strings, then proceed
-	if theObfMethod != "":
-                for r, d, f in os.walk(theDirectory):
-                    for file in f:
-                        if file.endswith(".cs") and "AssemblyInfo.cs" not in file and r.endswith("obj\\Debug") == 0 and r.endswith("obj\\Release") == 0:
-                                stringObfuscate(os.path.join(r, file), theName, theObfMethod)
 
-	print("")
-	print("[+] SUCCESS: Your new tool \"" + theName +  "\" now has the invisibility cloak applied.")
-	print("")
+	if (theFile == None):
+		# generate new GUID for C# project and replace tool name
+		replaceGUIDAndToolName(theDirectory, theName)
+			
+		# if user wants to obfuscate strings, then proceed
+		if theObfMethod != "":
+			for r, d, f in os.walk(theDirectory):
+				for file in f:
+					if file.endswith(".cs") and "AssemblyInfo.cs" not in file and r.endswith("obj\\Debug") == 0 and r.endswith("obj\\Release") == 0:
+						stringObfuscate(os.path.join(r, file), theName, theObfMethod)
 
+		print("")
+		print("[+] SUCCESS: Your new tool \"" + theName +  "\" now has the invisibility cloak applied.")
+		print("")
+	else:
+		currentToolName = os.path.splitext(os.path.basename(theFile))[0]
+		print(currentToolName)
+		stringObfuscate(theFile, theName, theObfMethod)
+		print("")
+		print("[+] SUCCESS: Your new file \"" + theFile +  "\" now has the invisibility cloak applied.")
+		print("")
 
 if __name__ == '__main__':
 	try:
 		parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter(), usage=globals()['__doc__'], version='0.4')
 		parser.add_option('-m', '--method', dest='obfMethod',help='string obfuscation method')
 		parser.add_option('-d', '--directory', dest='directory',help='directory of C# project')
+		parser.add_option('-f', '--file', dest='file',help='C# file')
 		parser.add_option('-n', '--name', dest='name',help='new tool name')
 		(options, args) = parser.parse_args()
 
 		# if directory or name or not specified, display help and exit
-		if (options.directory == None or options.name == None):
+		if ((options.directory == None and options.file == None) or options.name == None):
 			print("")
-			print("[-] ERROR: You must supply directory of C# project and new name for tool.")
+			print("[-] ERROR: You must supply a directory/file of C# project and new name for tool.")
 			print("")
 			parser.print_help()
 			sys.exit(0)
@@ -556,25 +569,36 @@ if __name__ == '__main__':
 			parser.print_help()
 			sys.exit(0)
 
-		# if directory provided does not exist, display message and exit
-		doesDirExist = os.path.isdir(options.directory)
-		if doesDirExist == 0:
-			print("")
-			print("[-] ERROR: Directory provided does not exist. Please check the path you are providing")
-			print("")
-			sys.exit(0)
+		if (options.file == None):
+			# if directory provided does not exist, display message and exit
+			doesDirExist = os.path.isdir(options.directory)
+			if (doesDirExist == 0):
+				print("")
+				print("[-] ERROR: Directory provided does not exist. Please check the path you are providing")
+				print("")
+				sys.exit(0)
+		else:
+			# if file provided does not exist, display message and exit
+			doesFileExist = os.path.isfile(options.file)
+			if (doesFileExist == 0):
+				print("")
+				print("[-] ERROR: File provided does not exist. Please check the path you are providing")
+				print("")
+				sys.exit(0)
+
 
 		# initialize variables        
 		theObfMethod = options.obfMethod
 		theDirectory = options.directory
+		theFile = options.file
 		theName = options.name
-        
-                # if no obfuscation method supplied
+
+		# if no obfuscation method supplied
 		if theObfMethod == None:
 			theObfMethod = ""
 
 		# proceed to main method
-		main(theObfMethod, theDirectory, theName)
+		main(theObfMethod, theDirectory, theName, theFile)
 
 	except KeyboardInterrupt: # Ctrl-C
 		raise
