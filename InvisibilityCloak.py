@@ -40,7 +40,7 @@ LICENSE
 
 VERSION
 
-	0.4
+	0.4.1
 
 """
 
@@ -252,7 +252,7 @@ def canProceedWithObfuscation(theLine, theItem):
 	elif "new Regex" in theLine or "Regex" in theLine:
 		return 0
 	# obfuscating unicode strings has been problematic
-	elif "Encoding.Unicode.GetString" in theLine:
+	elif "Encoding.Unicode.GetString" in theLine or "Encoding.Unicode.GetBytes" in theLine:
 		return 0
 	# obfuscating occurrence of this has been problematic
 	elif "Encoding.ASCII.GetBytes" in theLine:
@@ -534,7 +534,7 @@ def main(theObfMethod, theDirectory, theName):
 
 if __name__ == '__main__':
 	try:
-		parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter(), usage=globals()['__doc__'], version='0.4')
+		parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter(), usage=globals()['__doc__'], version='0.4.1')
 		parser.add_option('-m', '--method', dest='obfMethod',help='string obfuscation method')
 		parser.add_option('-d', '--directory', dest='directory',help='directory of C# project')
 		parser.add_option('-n', '--name', dest='name',help='new tool name')
