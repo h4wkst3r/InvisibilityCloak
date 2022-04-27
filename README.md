@@ -27,6 +27,7 @@ The below string candidates are not included in obfuscation
   * `"""` in the line
   * `""` in the line
   * `Encoding.Unicode.GetString` in the line
+  * `Encoding.Unicode.GetBytes` in the line
   * `Encoding.ASCII.GetBytes` in the line
   * Line starting with `"` and ending with `")]`. This is typically used for command line switches and needs to be static value.
 
