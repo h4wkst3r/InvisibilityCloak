@@ -40,7 +40,7 @@ LICENSE
 
 VERSION
 
-	0.4.1
+	0.5
 
 """
 from sys import exit
@@ -484,7 +484,7 @@ def main(theObfMethod: str, theDirectory: str, theName: str) -> None:
 	| ;-. . , . ,-. . |-. . | . |-  . . |    | ,-. ,-: | , 
 	| | | |/  | `-. | | | | | | |   | | \    | | | | | |<  
 	' ' ' '   ' `-' ' `-' ' ' ' `-' `-|  `-' ' `-' `-` ' ` 
-									`-'                    
+					`-'                    
 	""")
 
 	print("====================================================")
@@ -507,7 +507,7 @@ def main(theObfMethod: str, theDirectory: str, theName: str) -> None:
 
 if __name__ == '__main__':
 	try:
-		parser = OptionParser(formatter=TitledHelpFormatter(), usage=globals()['__doc__'], version='0.4.1')
+		parser = OptionParser(formatter=TitledHelpFormatter(), usage=globals()['__doc__'], version='0.5')
 		parser.add_option('-m', '--method', dest='obfMethod', help='string obfuscation method')
 		parser.add_option('-d', '--directory', dest='directory', help='directory of C# project')
 		parser.add_option('-n', '--name', dest='name', help='new tool name')
